@@ -7,59 +7,57 @@ ctx.canvas.width = 320;
 
 let Animation = function(frame_set, delay) {
 
-    this.count = 0;// Counts the number of game cycles since the last frame change.
-    this.delay = delay;// The number of game cycles to wait until the next frame change.
-    this.frame = 0;// The value in the sprite sheet of the sprite image / tile to display.
-    this.frame_index = 0;// The frame's index in the current animation frame set.
-    this.frame_set = frame_set;// The current animation frame set that holds sprite tile values.
+    this.count = 0;// počítá cykly od doby, kdy se změnil poslední frame
+    this.delay = delay;// počet cyklů, než se může změnit další
+    this.frame = 0;//hodnota v poli, kde jsou animace(pole animací)
+    this.frame_index = 0;// současný index v současném poli animací
+    this.frame_set = frame_set;// současný set animací(jsou 3 pole)
 
   }
 
 Animation.prototype = {
 
-    /* This changes the current animation frame set. For example, if the current
-    set is [0, 1], and the new set is [2, 3], it changes the set to [2, 3]. It also
-    sets the delay. */
+//Mění to aktuální set, pokud je například 1.pole, dá se 2., etc.
     change:function(frame_set, delay = 15) {
 
-      if (this.frame_set != frame_set) {// If the frame set is different:
+      if (this.frame_set != frame_set) {// pokud je frame set jiný, tak..
 
-        this.count = 0;// Reset the count.
-        this.delay = delay;// Set the delay.
-        this.frame_index = 0;// Start at the first frame in the new frame set.
-        this.frame_set = frame_set;// Set the new frame set.
-        this.frame = this.frame_set[this.frame_index];// Set the new frame value.
+        this.count = 0;// Resetuje se počítání
+        this.delay = delay;// Nastaví se delay
+        this.frame_index = 0;// Začne na novém indexu (snímku)
+        this.frame_set = frame_set;// Nastaví nové pole
+        this.frame = this.frame_set[this.frame_index];// Nastaví index v novém poli
 
       }
 
     },
 
-    /* Call this on each game cycle. */
+// Volá po každém cyklu
     update:function() {
 
-      this.count ++;// Keep track of how many cycles have passed since the last frame change.
+      this.count ++;// Měří, kolik cyklů už bylo
 
-      if (this.count >= this.delay) {// If enough cycles have passed, we change the frame.
+      if (this.count >= this.delay) {//Pokud už bylo dostatek snímků, změní se frame
 
-        this.count = 0;// Reset the count.
-        /* If the frame index is on the last value in the frame set, reset to 0.
-        If the frame index is not on the last value, just add 1 to it. */
+        this.count = 0;// Resetuje se count
+        /* Jestli je index na poslední hodnotě, tak se to dá na 0*/
+        //Jestli není index na poslední hodntoě, tak se to dá na 1
         this.frame_index = (this.frame_index == this.frame_set.length - 1) ? 0 : this.frame_index + 1;
-        this.frame = this.frame_set[this.frame_index];// Change the current frame value.
+        this.frame = this.frame_set[this.frame_index];// Změní aktuální index
 
       }
 
     }
 
 };
-
+//Pole, které má 3 sety - každé pole má jiné obrázky
 let sprite_sheet = {
     frame_sets: [[0, 1], [2, 3], [4, 5]],
     image: new Image()
 }
 
 let player = {
-
+//Animace chůze hráče
     animation: new Animation(),
     height:16,
     width:16,
@@ -77,7 +75,7 @@ let control = {
   right:false,
   up:false,
   keyListener:function(event) {
-
+//Pokud zmačknu šipku dolů, tak mi to dá "true" a potom, když zmačknu například left key, tak budu moct chodit s šipkou dolů a zároveň s šipkou doleva
     let key_state = (event.type == "keydown")?true:false;
 
     switch(event.keyCode) {
@@ -106,7 +104,7 @@ function animate() {
 function randomCislo(min, max) { // min and max included 
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
-
+//Třída pro Coins
 class Coins {
 
   constructor(x, y, speed = 4) {
@@ -115,15 +113,16 @@ class Coins {
       this.img = new Image();
       this.img.src = 'img/coin.gif';
   }
+  //postupné zrychlování
   move() {
       this.y += 2;
   }
-
+//pomoci funkce to dá random hodnotu na osu x v rozmezí 10-290 a osa y je -10
   obnov() {
       this.x = randomCislo(10,290);
       this.y = -10;
   }
-
+//vykreslí coin
   draw() {
       ctx.drawImage(this.img, this.x, this.y);
   }
@@ -135,11 +134,11 @@ function pohyb(){
   }
 }
 
-
+//objekt game
 let game = {
   coins: [],
   score: 0,
-
+//vymaluje se character a následuje vykreslení coinů
   paint: function () {
       ctx.clearRect(0,0,340,340);
       ctx.drawImage(sprite_sheet.image, player.animation.frame * SPRITE_SIZE, 0, SPRITE_SIZE, SPRITE_SIZE, Math.floor(player.x), Math.floor(player.y), SPRITE_SIZE, SPRITE_SIZE);
@@ -148,14 +147,16 @@ let game = {
       this.coins.forEach(function (obj) {
           obj.move();
           obj.draw();
+          //pokud hráč coinu chytí, přičte se mu 1 point
               if (player.y <= obj.y) {
                 this.score++;
-                scoreText.innerHTML = `Skóre: ${this.score}`
+                scoreText.innerHTML = `Skóre: ${this.score}`;
                   obj.obnov();
               }
+              //pokud hráč coinu nechytí, ubere se mu 1 point
               else if (obj.y >= 180-22) {
               this.score--; 
-              scoreText.innerHTML = `Skóre: ${this.score}`
+              scoreText.innerHTML = `Skóre: ${this.score}`;
               obj.obnov();
               }
       })
@@ -163,28 +164,28 @@ let game = {
 }
 
 let loop = function() {
-
+//jestli je hráč ve vzduchu, přidá se mu gravitace ke spadnutí + nemůže skákat
   if (control.up && player.jumping == false) {
 
     player.y_velocity -= 15;
     player.jumping = true;
 
   }
-
+//pokud jde doleva, dá se mu animace + se zrychlí
   if (control.left) {
 
     player.animation.change(sprite_sheet.frame_sets[2],15);
     player.x_velocity -= 0.5;
 
   }
-
+//pokud jde doprava, dá se mu animace + se zrychlí
   if (control.right) {
 
     player.animation.change(sprite_sheet.frame_sets[1],15);
     player.x_velocity += 0.5;
 
   }
-
+//pokud stojí na místě, dá se mu animace
   if (control.right == false && control.left == false){
 
     player.animation.change(sprite_sheet.frame_sets[0],20);
@@ -197,7 +198,7 @@ let loop = function() {
   player.x_velocity *= 0.9;// friction
   player.y_velocity *= 0.9;// friction
 
-  // if player is falling below floor line
+  // jestli hráč spadne pod tuhle úroven, tka se teleportuje zpátky
   if (player.y > 180 - 16) {
 
     player.jumping = false;
@@ -206,12 +207,12 @@ let loop = function() {
 
   }
 
-  // if player is going off the left of the screen
+  // pokud hráč projde přes tuhle hodnotu x, tak se teleportuje na druhou stranu x
   if (player.x < -32) {
 
     player.x = 320;
 
-  } else if (player.x > 320) {// if player goes past right boundary
+  } else if (player.x > 320) {//to samé akorát druhá strana
 
     player.x = -32;
 
@@ -219,7 +220,7 @@ let loop = function() {
 
 };
 
-sprite_sheet.image.src = "img/animation.png";// Start loading the image.
+sprite_sheet.image.src = "img/animation.png";
 window.addEventListener("keydown", control.keyListener)
 window.addEventListener("keyup", control.keyListener);
 window.requestAnimationFrame(loop);

@@ -33,6 +33,18 @@ canvas{
     width: 100%;
 }
 
+a {
+    color: #c96e1e;
+    text-decoration: none;
+}
+
+a:hover 
+{
+     color: #fff; 
+     text-decoration:none; 
+     cursor:pointer;  
+}
+
 .hraBorder{
     height: 700px;
 }
@@ -43,8 +55,16 @@ canvas{
 
 .BigH2{
     font-size: 60px;
+}
+
+.marginTop{
     margin-top: 300px;
 }
+
+.marginBot{
+    margin-bottom: 100px;
+}
+
 
 .btn{
     color: #fff;
